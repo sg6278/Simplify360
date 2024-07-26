@@ -1,0 +1,83 @@
+import java.util.*;
+
+public class FriendsNetwork {
+    
+    public static void main(String[] args) {
+        
+        Map<String, Set<String>> friendsNetwork = new HashMap<>();
+        addFriend(friendsNetwork, "Alice", "Bob");
+        addFriend(friendsNetwork, "Bob", "Janice");
+        addFriend(friendsNetwork, "Alice", "Charlie");
+        addFriend(friendsNetwork, "Charlie", "David");
+        addFriend(friendsNetwork, "David", "Janice");
+        addFriend(friendsNetwork, "Bob", "Charlie");
+        
+       
+        System.out.println("Friends of Alice: " + friendsNetwork.get("Alice"));
+        System.out.println("Friends of Bob: " + friendsNetwork.get("Bob"));
+        
+        
+        Set<String> commonFriends = findCommonFriends(friendsNetwork, "Alice", "Bob");
+        System.out.println("Common friends of Alice and Bob: " + commonFriends);
+        
+        // Find nth connection
+        int connectionAliceJanice = findNthConnection(friendsNetwork, "Alice", "Janice");
+        System.out.println("Connection between Alice and Janice: " + connectionAliceJanice);
+        
+        int connectionAliceCharlie = findNthConnection(friendsNetwork, "Alice", "Charlie");
+        System.out.println("Connection between Alice and Charlie: " + connectionAliceCharlie);
+        
+        int connectionAliceDavid = findNthConnection(friendsNetwork, "Alice", "David");
+        System.out.println("Connection between Alice and David: " + connectionAliceDavid);
+        
+        int connectionAliceNonExistent = findNthConnection(friendsNetwork, "Alice", "NonExistent");
+        System.out.println("Connection between Alice and NonExistent: " + connectionAliceNonExistent);
+    }
+    
+   
+    private static void addFriend(Map<String, Set<String>> network, String person1, String person2) {
+        network.computeIfAbsent(person1, k -> new HashSet<>()).add(person2);
+        network.computeIfAbsent(person2, k -> new HashSet<>()).add(person1);
+    }
+    
+    // Function to find common friends
+    private static Set<String> findCommonFriends(Map<String, Set<String>> network, String person1, String person2) {
+        Set<String> friends1 = network.getOrDefault(person1, Collections.emptySet());
+        Set<String> friends2 = network.getOrDefault(person2, Collections.emptySet());
+        Set<String> common = new HashSet<>(friends1);
+        common.retainAll(friends2);
+        return common;
+    }
+    
+    
+    private static int findNthConnection(Map<String, Set<String>> network, String start, String end) {
+        if (!network.containsKey(start) || !network.containsKey(end)) return -1;
+        
+        Queue<String> queue = new LinkedList<>();
+        Set<String> visited = new HashSet<>();
+        Map<String, Integer> distance = new HashMap<>();
+        
+        queue.add(start);
+        visited.add(start);
+        distance.put(start, 0);
+        
+        while (!queue.isEmpty()) {
+            String current = queue.poll();
+            int currentDistance = distance.get(current);
+            
+            if (current.equals(end)) {
+                return currentDistance;
+            }
+            
+            for (String friend : network.getOrDefault(current, Collections.emptySet())) {
+                if (!visited.contains(friend)) {
+                    queue.add(friend);
+                    visited.add(friend);
+                    distance.put(friend, currentDistance + 1);
+                }
+            }
+        }
+        
+        return -1; // No connection found
+    }
+}
