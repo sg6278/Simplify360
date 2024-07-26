@@ -1,0 +1,72 @@
+import java.util.*;
+
+class Task {
+    String name;
+    int duration;
+    int earliestStart = 0;
+    int earliestFinish = 0;
+    int latestStart = Integer.MAX_VALUE;
+    int latestFinish = Integer.MAX_VALUE;
+    List<Task> dependencies = new ArrayList<>();
+
+    Task(String name, int duration) {
+        this.name = name;
+        this.duration = duration;
+    }
+}
+
+public class ProjectScheduler {
+
+    public static void main(String[] args) {
+        Task t1 = new Task("T1", 3);
+        Task t2 = new Task("T2", 2);
+        Task t3 = new Task("T3", 4);
+        Task t4 = new Task("T4", 1);
+        Task t5 = new Task("T5", 2);
+        
+        t2.dependencies.add(t1); // T2 depends on T1
+        t3.dependencies.add(t1); // T3 depends on T1
+        t4.dependencies.add(t2); // T4 depends on T2
+        t5.dependencies.add(t3); // T5 depends on T3
+        t5.dependencies.add(t4); // T5 depends on T4
+
+        List<Task> tasks = Arrays.asList(t1, t2, t3, t4, t5);
+
+        calculateEarliestTimes(tasks);
+
+        int projectCompletionTime = tasks.stream().mapToInt(task -> task.earliestFinish).max().orElse(0);
+
+        calculateLatestTimes(tasks, projectCompletionTime);
+
+        System.out.println("Earliest time all tasks will be completed: " + projectCompletionTime);
+        System.out.println("Latest time all tasks will be completed: " + projectCompletionTime);
+    }
+
+    private static void calculateEarliestTimes(List<Task> tasks) {
+        for (Task task : tasks) {
+            task.earliestFinish = task.earliestStart + task.duration;
+            for (Task dependent : tasks) {
+                if (dependent.dependencies.contains(task)) {
+                    dependent.earliestStart = Math.max(dependent.earliestStart, task.earliestFinish);
+                }
+            }
+        }
+    }
+
+    private static void calculateLatestTimes(List<Task> tasks, int projectCompletionTime) {
+        for (Task task : tasks) {
+            if (task.earliestFinish == projectCompletionTime) {
+                task.latestFinish = projectCompletionTime;
+                task.latestStart = task.latestFinish - task.duration;
+            }
+        }
+
+        for (int i = tasks.size() - 1; i >= 0; i--) {
+            Task task = tasks.get(i);
+            for (Task dependency : task.dependencies) {
+                dependency.latestFinish = Math.min(dependency.latestFinish, task.latestStart);
+                dependency.latestStart = dependency.latestFinish - dependency.duration;
+            }
+        }
+    }
+}
